@@ -1,0 +1,17 @@
+{
+  "notes": [
+    {
+      "id": "2",
+      "title": "Interview Questions",
+      "description": "Prepare JavaScript and React questions.",
+      "category": "work"
+    },
+    {
+      "title": "jerifa",
+      "description": "backend language",
+      "category": "Education",
+      "id": "yJWy2n3zeSM"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

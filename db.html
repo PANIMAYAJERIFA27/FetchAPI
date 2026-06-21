@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+
+    <link rel="stylesheet" href="db.css">
+</head>
+<body>
+
+    <h1 class="title">📝 My Notes App</h1>
+
+    <form id="form">
+
+        <input
+            type="text"
+            id="title"
+            placeholder="Enter Title"
+        >
+        <small class="msg"></small>
+
+        <textarea
+            id="description"
+            placeholder="Enter Description"
+        ></textarea>
+        <small class="msg"></small>
+
+        <select id="category">
+            <option>Education</option>
+            <option>Personal</option>
+            <option>Work</option>
+            <option>Others</option>
+        </select>
+
+        <br><br>
+
+        <button class="btn" type="submit">
+            Save Note
+        </button>
+
+    </form>
+
+    <br>
+
+    <div id="container"></div>
+
+<script>
+
+const form = document.getElementById("form");
+const title = document.getElementById("title");
+const description = document.getElementById("description");
+const category = document.getElementById("category");
+const container = document.getElementById("container");
+const msg = document.querySelectorAll(".msg");
+
+const URL = "http://localhost:3000/notes";
+
+let editId = null;
+
+/* ================= GET ================= */
+
+function render(){
+
+    container.innerHTML = "";
+
+    fetch(URL)
+    .then(response => response.json())
+    .then(notes => {
+
+        notes.forEach(note => {
+
+            container.innerHTML += `
+            <div class="card">
+
+                <h2>${note.title}</h2>
+
+                <p>${note.description}</p>
+
+                <p><b>Category :</b> ${note.category}</p>
+
+                <div class="btn-group">
+
+                    <button
+                        class="edit-btn"
+                        onclick="loadEdit('${note.id}')">
+                        ✏ Edit
+                    </button>
+
+                    <button
+                        class="delete-btn"
+                        onclick="dlt(${note.id})">
+                        🗑 Delete
+                    </button>
+
+                </div>
+
+            </div>
+            `;
+
+        });
+
+    })
+    .catch(error => console.log(error));
+
+}
+
+/* ================= LOAD FOR EDIT ================= */
+
+function loadEdit(id){
+
+    fetch(`${URL}/${id}`)
+    .then(response => response.json())
+    .then(note => {
+
+        title.value = note.title;
+        description.value = note.description;
+        category.value = note.category;
+
+        editId = id;
+
+        window.scrollTo({
+            top:0,
+            behavior:"smooth"
+        });
+
+    });
+
+}
+
+/* ================= DELETE ================= */
+
+function dlt(id){
+
+    if(!confirm("Delete this note?")){
+        return;
+    }
+
+    fetch(`${URL}/${id}`,{
+
+        method:"DELETE"
+
+    })
+
+    .then(() => {
+
+        render();
+
+    })
+
+    .catch(error => console.log(error));
+
+}
+
+/* ================= ADD / UPDATE ================= */
+
+form.addEventListener("submit",function(e){
+
+    e.preventDefault();
+
+    msg[0].textContent = "";
+    msg[1].textContent = "";
+
+    if(title.value.trim() === ""){
+
+        msg[0].textContent = "Title is required";
+        return;
+
+    }
+
+    if(description.value.trim() === ""){
+
+        msg[1].textContent = "Description is required";
+        return;
+
+    }
+
+    const note = {
+
+        title:title.value,
+        description:description.value,
+        category:category.value
+
+    };
+
+    /* ---------- POST ---------- */
+
+    if(editId === null){
+
+        fetch("http://localhost:3000/notes",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(note)
+
+        })
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            form.reset();
+
+            render();
+
+        })
+
+        .catch(error => console.log(error));
+
+    }
+
+    /* ---------- PUT ---------- */
+
+    else{
+
+        fetch(`http://localhost:3000/notes/${id}`,{
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                id:editId,
+                title:title.value,
+                description:description.value,
+                category:category.value
+
+            })
+
+        })
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            editId = null;
+
+            form.reset();
+
+            render();
+
+        })
+
+        .catch(error => console.log(error));
+
+    }
+
+});
+
+/* ================= FIRST LOAD ================= */
+
+render();
+
+</script>
+
+</body>
+</html>
